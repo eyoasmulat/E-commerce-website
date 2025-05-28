@@ -11,8 +11,8 @@ router.post('/register', async (req, res) => {
     const { name, email, password } = req.body;
     
     // Check if user exists
-    const [existingUsers] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
-    if (existingUsers.length > 0) {
+    const [users] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+    if (users.length > 0) {
       return res.status(400).json({ message: 'User already exists' });
     }
 
@@ -30,10 +30,10 @@ router.post('/register', async (req, res) => {
       expiresIn: '30d',
     });
 
-    const [user] = await pool.query('SELECT id, name, email FROM users WHERE id = ?', [result.insertId]);
-
     res.status(201).json({
-      ...user[0],
+      id: result.insertId,
+      name,
+      email,
       token,
     });
   } catch (error) {
@@ -82,7 +82,7 @@ router.get('/profile', async (req, res) => {
 
     const decoded = jwt.verify(token, 'your_jwt_secret');
     const [users] = await pool.query(
-      'SELECT id, name, email FROM users WHERE id = ?',
+      'SELECT id, name, email, role FROM users WHERE id = ?',
       [decoded.id]
     );
 

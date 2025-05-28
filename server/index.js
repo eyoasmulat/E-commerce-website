@@ -3,9 +3,9 @@ import cors from 'cors';
 import { connectDB } from './config/database.js';
 
 // Import routes
-import productRoutes from './routes/products.js';
-import userRoutes from './routes/users.js';
-import orderRoutes from './routes/orders.js';
+import productRoutes from './src/routes/products.js';
+import userRoutes from './src/routes/users.js';
+import orderRoutes from './src/routes/orders.js';
 
 const app = express();
 

@@ -32,8 +32,9 @@ router.post('/', async (req, res) => {
     const { name, description, price, imageUrl, stock, category } = req.body;
     const [result] = await pool.query(
       'INSERT INTO products (name, description, price, image_url, stock, category) VALUES (?, ?, ?, ?, ?, ?)',
-      [name, description, price, imageUrl, stock, category]
+      [name, description, price, imageUrl, stock || 0, category]
     );
+    
     const [product] = await pool.query('SELECT * FROM products WHERE id = ?', [result.insertId]);
     res.status(201).json(product[0]);
   } catch (error) {
@@ -49,9 +50,11 @@ router.put('/:id', async (req, res) => {
       'UPDATE products SET name = ?, description = ?, price = ?, image_url = ?, stock = ?, category = ? WHERE id = ?',
       [name, description, price, imageUrl, stock, category, req.params.id]
     );
+    
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: 'Product not found' });
     }
+    
     const [product] = await pool.query('SELECT * FROM products WHERE id = ?', [req.params.id]);
     res.json(product[0]);
   } catch (error) {
@@ -66,7 +69,7 @@ router.delete('/:id', async (req, res) => {
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: 'Product not found' });
     }
-    res.json({ message: 'Product deleted' });
+    res.json({ message: 'Product deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
