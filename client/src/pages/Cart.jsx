@@ -1,44 +1,15 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { TrashIcon } from '@heroicons/react/24/outline';
+import { useCart } from '../context/CartContext';
 
 export default function Cart() {
-  // Mock cart data (replace with actual cart state management)
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      name: 'Premium Headphones',
-      price: 299.99,
-      quantity: 1,
-      image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3',
-    },
-    {
-      id: 2,
-      name: 'Smart Watch',
-      price: 199.99,
-      quantity: 2,
-      image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?ixlib=rb-4.0.3',
-    },
-  ]);
-
-  const updateQuantity = (id, newQuantity) => {
-    if (newQuantity < 1) return;
-    setCartItems((items) =>
-      items.map((item) =>
-        item.id === id ? { ...item, quantity: newQuantity } : item
-      )
-    );
-  };
-
-  const removeItem = (id) => {
-    setCartItems((items) => items.filter((item) => item.id !== id));
-  };
+  const { cartItems, updateQuantity, removeFromCart } = useCart();
 
   const subtotal = cartItems.reduce(
     (total, item) => total + item.price * item.quantity,
     0
   );
-  const shipping = 10;
+  const shipping = cartItems.length > 0 ? 10 : 0;
   const tax = subtotal * 0.1;
   const total = subtotal + shipping + tax;
 
@@ -100,7 +71,7 @@ export default function Cart() {
 
                       <button
                         type="button"
-                        onClick={() => removeItem(item.id)}
+                        onClick={() => removeFromCart(item.id)}
                         className="text-red-600 hover:text-red-500"
                       >
                         <TrashIcon className="h-5 w-5" />

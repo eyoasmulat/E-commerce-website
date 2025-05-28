@@ -1,37 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ShoppingBagIcon, HeartIcon, StarIcon } from '@heroicons/react/24/outline';
-
-const featuredProducts = [
-  {
-    id: 1,
-    name: 'Premium Leather Bag',
-    price: 299.99,
-    image: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=749&q=80',
-    rating: 4.5,
-  },
-  {
-    id: 2,
-    name: 'Classic Watch',
-    price: 199.99,
-    image: 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=689&q=80',
-    rating: 4.8,
-  },
-  {
-    id: 3,
-    name: 'Designer Sunglasses',
-    price: 159.99,
-    image: 'https://images.unsplash.com/photo-1572635196237-14b3f281503f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=880&q=80',
-    rating: 4.3,
-  },
-  {
-    id: 4,
-    name: 'Wireless Headphones',
-    price: 249.99,
-    image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=870&q=80',
-    rating: 4.7,
-  },
-];
+import { useCart } from '../context/CartContext';
 
 const categories = [
   { id: 1, name: 'Electronics', icon: '🔌' },
@@ -42,15 +12,24 @@ const categories = [
 
 export default function Home() {
   const [isLoading, setIsLoading] = useState(true);
+  const [featuredProducts, setFeaturedProducts] = useState([]);
+  const { addToCart } = useCart();
 
   useEffect(() => {
-    // Simulate loading
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000);
-
-    return () => clearTimeout(timer);
+    fetchProducts();
   }, []);
+
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch('http://localhost:5001/api/products');
+      const data = await response.json();
+      setFeaturedProducts(data.slice(0, 4)); // Get first 4 products as featured
+    } catch (error) {
+      console.error('Error fetching products:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -134,10 +113,13 @@ export default function Home() {
                     <p className="text-lg font-medium text-gray-900">${product.price}</p>
                     <div className="flex items-center">
                       <StarIcon className="h-5 w-5 text-yellow-400" />
-                      <span className="ml-1 text-sm text-gray-600">{product.rating}</span>
+                      <span className="ml-1 text-sm text-gray-600">{product.rating || 4.5}</span>
                     </div>
                   </div>
-                  <button className="mt-4 flex w-full items-center justify-center rounded-md border border-transparent bg-primary-600 px-8 py-2 text-base font-medium text-white hover:bg-primary-700">
+                  <button 
+                    onClick={() => addToCart(product)}
+                    className="mt-4 flex w-full items-center justify-center rounded-md border border-transparent bg-primary-600 px-8 py-2 text-base font-medium text-white hover:bg-primary-700"
+                  >
                     <ShoppingBagIcon className="h-5 w-5 mr-2" />
                     Add to Cart
                   </button>

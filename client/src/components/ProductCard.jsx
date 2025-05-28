@@ -1,6 +1,13 @@
 import { ShoppingCartIcon } from '@heroicons/react/24/outline';
+import { useCart } from '../context/CartContext';
 
 export default function ProductCard({ product }) {
+  const { addToCart } = useCart();
+
+  const handleAddToCart = () => {
+    addToCart(product);
+  };
+
   return (
     <div className="card group">
       <div className="aspect-w-1 aspect-h-1 w-full overflow-hidden rounded-lg bg-gray-200 xl:aspect-w-7 xl:aspect-h-8">
@@ -17,7 +24,7 @@ export default function ProductCard({ product }) {
         </div>
         <button
           className="btn btn-primary flex items-center space-x-2"
-          onClick={() => {/* Add to cart functionality */}}
+          onClick={handleAddToCart}
         >
           <ShoppingCartIcon className="h-5 w-5" />
           <span>Add</span>
