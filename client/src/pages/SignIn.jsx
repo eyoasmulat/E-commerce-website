@@ -1,41 +1,27 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 
-export default function SignUp() {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    confirmPassword: ''
-  });
+export default function SignIn() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { register } = useAuth();
+  const { login } = useAuth();
   const navigate = useNavigate();
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+  const location = useLocation();
+  const from = location.state?.from || '/';
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      if (formData.password !== formData.confirmPassword) {
-        throw new Error('Passwords do not match');
-      }
-
-      await register(formData.name, formData.email, formData.password);
-      toast.success('Account created successfully!');
-      navigate('/');
+      await login(email, password);
+      toast.success('Welcome back!');
+      navigate(from);
     } catch (error) {
-      toast.error(error.message || 'Failed to create account');
+      toast.error(error.message || 'Failed to sign in');
     } finally {
       setIsLoading(false);
     }
@@ -46,36 +32,21 @@ export default function SignUp() {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create your account
+            Welcome Back
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Already have an account?{' '}
+            Or{' '}
             <Link
-              to="/signin"
+              to="/signup"
               className="font-medium text-indigo-600 hover:text-indigo-500"
             >
-              Sign in
+              create a new account
             </Link>
           </p>
         </div>
 
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm space-y-4">
-            <div>
-              <label htmlFor="name" className="sr-only">
-                Full Name
-              </label>
-              <input
-                id="name"
-                name="name"
-                type="text"
-                required
-                value={formData.name}
-                onChange={handleChange}
-                className="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Full Name"
-              />
-            </div>
             <div>
               <label htmlFor="email" className="sr-only">
                 Email address
@@ -86,8 +57,8 @@ export default function SignUp() {
                 type="email"
                 autoComplete="email"
                 required
-                value={formData.email}
-                onChange={handleChange}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Email address"
               />
@@ -100,29 +71,33 @@ export default function SignUp() {
                 id="password"
                 name="password"
                 type="password"
-                autoComplete="new-password"
+                autoComplete="current-password"
                 required
-                value={formData.password}
-                onChange={handleChange}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 className="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
                 placeholder="Password"
               />
             </div>
-            <div>
-              <label htmlFor="confirmPassword" className="sr-only">
-                Confirm Password
-              </label>
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
               <input
-                id="confirmPassword"
-                name="confirmPassword"
-                type="password"
-                autoComplete="new-password"
-                required
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                className="appearance-none relative block w-full px-3 py-3 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:z-10 sm:text-sm"
-                placeholder="Confirm Password"
+                id="remember-me"
+                name="remember-me"
+                type="checkbox"
+                className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
               />
+              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+                Remember me
+              </label>
+            </div>
+
+            <div className="text-sm">
+              <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500">
+                Forgot your password?
+              </a>
             </div>
           </div>
 
@@ -154,12 +129,12 @@ export default function SignUp() {
                   ></path>
                 </svg>
               ) : null}
-              Create Account
+              Sign in
             </button>
           </div>
         </form>
 
-        {/* Social Sign Up */}
+        {/* Social Sign In */}
         <div className="mt-6">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
@@ -176,7 +151,7 @@ export default function SignUp() {
                 href="#"
                 className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
               >
-                <span className="sr-only">Sign up with Google</span>
+                <span className="sr-only">Sign in with Google</span>
                 <svg className="w-5 h-5" viewBox="0 0 24 24">
                   <path
                     fill="currentColor"
@@ -191,7 +166,7 @@ export default function SignUp() {
                 href="#"
                 className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
               >
-                <span className="sr-only">Sign up with GitHub</span>
+                <span className="sr-only">Sign in with GitHub</span>
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                   <path
                     fillRule="evenodd"
@@ -202,18 +177,6 @@ export default function SignUp() {
               </a>
             </div>
           </div>
-        </div>
-
-        {/* Terms and Privacy */}
-        <div className="text-sm text-center text-gray-500">
-          By signing up, you agree to our{' '}
-          <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500">
-            Terms of Service
-          </a>{' '}
-          and{' '}
-          <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500">
-            Privacy Policy
-          </a>
         </div>
       </div>
     </div>

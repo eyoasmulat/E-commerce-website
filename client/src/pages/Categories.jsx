@@ -1,71 +1,145 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useCart } from '../context/CartContext';
+import { toast } from 'react-toastify';
 
 export default function Categories() {
-  const [categories, setCategories] = useState([
-    {
-      id: 1,
-      name: 'Electronics',
-      description: 'Electronic devices and accessories',
-      image: 'https://images.unsplash.com/photo-1498049794561-7780e7231661?ixlib=rb-4.0.3',
-      productCount: 3
-    },
-    {
-      id: 2,
-      name: 'Fashion',
-      description: 'Clothing, shoes, and accessories',
-      image: 'https://images.unsplash.com/photo-1445205170230-053b83016050?ixlib=rb-4.0.3',
-      productCount: 3
-    },
-    {
-      id: 3,
-      name: 'Home & Living',
-      description: 'Furniture, decor, and home essentials',
-      image: 'https://images.unsplash.com/photo-1484101403633-562f891dc89a?ixlib=rb-4.0.3',
-      productCount: 3
+  const [categories, setCategories] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const { addToCart } = useCart();
+
+  useEffect(() => {
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    if (selectedCategory) {
+      fetchProductsByCategory(selectedCategory);
+    } else {
+      fetchAllProducts();
     }
-  ]);
+  }, [selectedCategory]);
+
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch('http://localhost:5001/api/products/categories');
+      if (!response.ok) throw new Error('Failed to fetch categories');
+      const data = await response.json();
+      setCategories(data);
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Failed to load categories');
+    }
+  };
+
+  const fetchAllProducts = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('http://localhost:5001/api/products');
+      if (!response.ok) throw new Error('Failed to fetch products');
+      const data = await response.json();
+      setProducts(data);
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Failed to load products');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchProductsByCategory = async (category) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`http://localhost:5001/api/products/category/${category}`);
+      if (!response.ok) throw new Error('Failed to fetch products');
+      const data = await response.json();
+      setProducts(data);
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Failed to load products');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleAddToCart = (product) => {
+    addToCart(product);
+    toast.success(`Added ${product.name} to cart`);
+  };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div className="flex items-baseline justify-between border-b border-gray-200 pb-6">
-        <h1 className="text-4xl font-extrabold tracking-tight text-gray-900">Categories</h1>
-      </div>
-
-      <div className="mt-8 grid grid-cols-1 gap-y-12 sm:grid-cols-2 sm:gap-x-6 lg:grid-cols-3 xl:gap-x-8">
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-8">Shop by Category</h1>
+      
+      {/* Categories */}
+      <div className="flex flex-wrap gap-4 mb-8">
+        <button
+          onClick={() => setSelectedCategory(null)}
+          className={`px-4 py-2 rounded-full ${
+            !selectedCategory
+              ? 'bg-indigo-600 text-white'
+              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+          }`}
+        >
+          All Products
+        </button>
         {categories.map((category) => (
-          <div key={category.id} className="group relative">
-            <div className="relative h-72 w-full overflow-hidden rounded-lg">
-              <img
-                src={category.image}
-                alt={category.name}
-                className="h-full w-full object-cover object-center"
-              />
-              <div className="absolute inset-0 bg-black bg-opacity-30 transition-opacity group-hover:opacity-75" />
-            </div>
-            <div className="absolute bottom-0 left-0 right-0 p-6">
-              <h3 className="text-xl font-semibold text-white">
-                <Link to={`/categories/${category.id}`}>
-                  <span className="absolute inset-0" />
-                  {category.name}
-                </Link>
-              </h3>
-              <p className="mt-1 text-sm text-gray-200">{category.description}</p>
-              <p className="mt-1 text-sm font-medium text-white">
-                {category.productCount} Products
-              </p>
-            </div>
-          </div>
+          <button
+            key={category}
+            onClick={() => setSelectedCategory(category)}
+            className={`px-4 py-2 rounded-full ${
+              selectedCategory === category
+                ? 'bg-indigo-600 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+            }`}
+          >
+            {category}
+          </button>
         ))}
       </div>
 
-      {/* Featured Products Section */}
-      <div className="mt-16">
-        <h2 className="text-2xl font-extrabold tracking-tight text-gray-900">Featured Products</h2>
-        <div className="mt-6 grid grid-cols-1 gap-y-10 gap-x-6 sm:grid-cols-2 lg:grid-cols-4 xl:gap-x-8">
-          {/* Add featured products here */}
+      {/* Products Grid */}
+      {isLoading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
         </div>
-      </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          {products.map((product) => (
+            <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+              <img
+                src={product.image_url}
+                alt={product.name}
+                className="w-full h-48 object-cover"
+              />
+              <div className="p-4">
+                <h3 className="text-lg font-semibold mb-2">{product.name}</h3>
+                <p className="text-gray-600 text-sm mb-4">{product.description}</p>
+                <div className="flex justify-between items-center">
+                  <span className="text-lg font-bold">${product.price}</span>
+                  <button
+                    onClick={() => handleAddToCart(product)}
+                    className="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700"
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+                <div className="mt-2 text-sm text-gray-500">
+                  Stock: {product.stock}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* No Products Message */}
+      {!isLoading && products.length === 0 && (
+        <div className="text-center py-12">
+          <p className="text-gray-500 text-lg">No products found in this category.</p>
+        </div>
+      )}
     </div>
   );
 } 
