@@ -3,8 +3,16 @@
 @tailwind utilities;
 
 @layer components {
+  .nav-link {
+    @apply text-gray-500 hover:text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 border-transparent hover:border-gray-300;
+  }
+  
+  .card {
+    @apply bg-white p-4 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200;
+  }
+  
   .btn {
-    @apply font-medium rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2;
+    @apply px-4 py-2 rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-offset-2;
   }
   
   .btn-primary {
@@ -12,15 +20,11 @@
   }
   
   .btn-secondary {
-    @apply bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 focus:ring-primary-500;
+    @apply bg-gray-200 text-gray-700 hover:bg-gray-300 focus:ring-gray-500;
   }
 
   .input {
     @apply block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500;
-  }
-
-  .card {
-    @apply bg-white shadow-sm rounded-lg overflow-hidden hover:shadow-lg transition-shadow duration-300;
   }
 }
 

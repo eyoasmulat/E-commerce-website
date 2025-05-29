@@ -1,35 +1,57 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, Navigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { toast } from 'react-toastify';
 
-export default function Profile() {
-  const [user] = useState({
-    name: 'John Doe',
-    email: 'john@example.com',
-    joinedDate: 'January 2024'
-  });
+function Profile() {
+  const { user, token, isAuthenticated, logout } = useAuth();
+  const [orders, setOrders] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [orders] = useState([
-    {
-      id: 1,
-      date: '2024-01-15',
-      total: 499.98,
-      status: 'delivered',
-      items: [
-        {
-          id: 1,
-          name: 'Premium Headphones',
-          price: 299.99,
-          quantity: 1
-        },
-        {
-          id: 2,
-          name: 'Smart Watch',
-          price: 199.99,
-          quantity: 1
-        }
-      ]
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchOrders();
     }
-  ]);
+  }, [isAuthenticated]);
+
+  const fetchOrders = async () => {
+    try {
+      const response = await fetch('http://localhost:5001/api/orders/my-orders', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          toast.error('Please login again');
+          logout();
+          return;
+        }
+        throw new Error('Failed to fetch orders');
+      }
+
+      const data = await response.json();
+      setOrders(data);
+    } catch (error) {
+      toast.error('Failed to load order history');
+      console.error('Error fetching orders:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const joinedDate = new Date(user.createdAt || Date.now()).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long'
+  });
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -49,60 +71,65 @@ export default function Profile() {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Member Since</label>
-                <p className="mt-1 text-lg text-gray-900">{user.joinedDate}</p>
+                <p className="mt-1 text-lg text-gray-900">{joinedDate}</p>
               </div>
-              <button className="btn btn-primary w-full">Edit Profile</button>
+              <button 
+                onClick={() => toast.info('Profile editing will be available soon!')}
+                className="w-full px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                Edit Profile
+              </button>
             </div>
           </div>
         </div>
 
         {/* Order History Section */}
-        <div className="mt-8 lg:mt-0 lg:w-2/3">
+        <div className="lg:w-2/3 mt-8 lg:mt-0">
           <div className="bg-white shadow rounded-lg p-6">
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Order History</h2>
-            {orders.length === 0 ? (
-              <p className="text-gray-500">No orders found.</p>
+            {isLoading ? (
+              <div className="text-center py-4">Loading orders...</div>
+            ) : orders.length === 0 ? (
+              <div className="text-center py-4 text-gray-500">
+                No orders found
+              </div>
             ) : (
-              <div className="space-y-8">
+              <div className="space-y-6">
                 {orders.map((order) => (
                   <div key={order.id} className="border rounded-lg p-4">
-                    <div className="flex justify-between items-center mb-4">
+                    <div className="flex justify-between items-start mb-2">
                       <div>
-                        <h3 className="text-lg font-medium text-gray-900">
-                          Order #{order.id}
-                        </h3>
+                        <h3 className="text-lg font-medium">Order #{order.id}</h3>
                         <p className="text-sm text-gray-500">
-                          Placed on {new Date(order.date).toLocaleDateString()}
+                          {new Date(order.created_at).toLocaleDateString()}
                         </p>
                       </div>
-                      <span className="px-3 py-1 rounded-full text-sm font-medium capitalize bg-green-100 text-green-800">
-                        {order.status}
+                      <span className={`px-2 py-1 rounded-full text-sm ${
+                        order.status === 'completed' ? 'bg-green-100 text-green-800' :
+                        order.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
                       </span>
                     </div>
-                    <div className="border-t pt-4">
-                      {order.items.map((item) => (
-                        <div key={item.id} className="flex justify-between py-2">
-                          <div>
-                            <p className="text-gray-900">{item.name}</p>
-                            <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
-                          </div>
-                          <p className="text-gray-900">${item.price.toFixed(2)}</p>
-                        </div>
-                      ))}
-                      <div className="border-t mt-4 pt-4 flex justify-between">
-                        <p className="font-medium text-gray-900">Total</p>
-                        <p className="font-medium text-gray-900">
-                          ${order.total.toFixed(2)}
-                        </p>
-                      </div>
-                    </div>
                     <div className="mt-4">
-                      <Link
-                        to={`/orders/${order.id}`}
-                        className="text-primary-600 hover:text-primary-500 font-medium"
-                      >
-                        View Order Details
-                      </Link>
+                      <h4 className="text-sm font-medium text-gray-900">Items:</h4>
+                      <ul className="mt-2 divide-y divide-gray-200">
+                        {order.items.map((item) => (
+                          <li key={item.id} className="py-2">
+                            <div className="flex justify-between">
+                              <span className="text-sm">{item.name}</span>
+                              <span className="text-sm text-gray-500">
+                                {item.quantity} x ${item.price}
+                              </span>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div className="mt-4 flex justify-between items-center">
+                      <span className="text-sm font-medium">Total Amount:</span>
+                      <span className="text-lg font-bold">${order.total_amount}</span>
                     </div>
                   </div>
                 ))}
@@ -113,4 +140,6 @@ export default function Profile() {
       </div>
     </div>
   );
-} 
+}
+
+export default Profile; 

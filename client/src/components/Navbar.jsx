@@ -1,25 +1,21 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingCartIcon, UserIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
-  const [user, setUser] = useState(null);
+  const { cartItems } = useCart();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
-  }, []);
-
   const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setUser(null);
+    logout();
     navigate('/login');
   };
+
+  const cartItemsCount = cartItems.reduce((total, item) => total + item.quantity, 0);
 
   return (
     <nav className="bg-white shadow-md">
@@ -42,34 +38,38 @@ export default function Navbar() {
             </div>
           </div>
           <div className="hidden sm:ml-6 sm:flex sm:items-center">
-            <Link to="/cart" className="p-2 text-gray-400 hover:text-gray-500">
+            <Link to="/cart" className="p-2 text-gray-400 hover:text-gray-500 relative">
               <ShoppingCartIcon className="h-6 w-6" />
+              {cartItemsCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full h-5 w-5 flex items-center justify-center text-xs">
+                  {cartItemsCount}
+                </span>
+              )}
             </Link>
             {user ? (
-              <div className="ml-3 relative">
-                <div className="flex items-center">
-                  <Link to="/profile" className="p-2 text-gray-400 hover:text-gray-500">
-                    <UserIcon className="h-6 w-6" />
-                  </Link>
-                  <button
-                    onClick={handleLogout}
-                    className="ml-2 px-3 py-1 text-sm font-medium text-gray-700 hover:text-gray-900"
-                  >
-                    Logout
-                  </button>
-                </div>
+              <div className="ml-3 relative flex items-center space-x-4">
+                <Link to="/profile" className="flex items-center space-x-2 text-gray-700 hover:text-gray-900">
+                  <UserIcon className="h-6 w-6" />
+                  <span className="font-medium">{user.name}</span>
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                >
+                  Logout
+                </button>
               </div>
             ) : (
               <div className="ml-3 flex items-center space-x-4">
                 <Link
                   to="/login"
-                  className="text-gray-500 hover:text-gray-900 px-3 py-1 text-sm font-medium"
+                  className="text-gray-500 hover:text-gray-900 px-3 py-2 text-sm font-medium"
                 >
                   Login
                 </Link>
                 <Link
                   to="/signup"
-                  className="bg-indigo-600 text-white px-3 py-1 rounded-md text-sm font-medium hover:bg-indigo-700"
+                  className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
                   Sign up
                 </Link>
@@ -115,6 +115,9 @@ export default function Navbar() {
             </Link>
             {user ? (
               <>
+                <div className="border-transparent text-gray-500 pl-3 pr-4 py-2 border-l-4 text-base font-medium">
+                  Welcome, {user.name}
+                </div>
                 <Link
                   to="/profile"
                   className="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
@@ -123,7 +126,7 @@ export default function Navbar() {
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="w-full text-left border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+                  className="w-full text-left border-transparent text-red-600 hover:bg-gray-50 hover:border-gray-300 hover:text-red-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
                 >
                   Logout
                 </button>
@@ -138,7 +141,7 @@ export default function Navbar() {
                 </Link>
                 <Link
                   to="/signup"
-                  className="border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-300 hover:text-gray-700 block pl-3 pr-4 py-2 border-l-4 text-base font-medium"
+                  className="border-transparent bg-indigo-600 text-white hover:bg-indigo-700 block pl-3 pr-4 py-2 text-base font-medium rounded-md mx-3"
                 >
                   Sign up
                 </Link>
